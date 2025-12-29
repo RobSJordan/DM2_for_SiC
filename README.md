@@ -11,8 +11,10 @@ This project follows the workflow desribed within the original DM2 paper (https:
 
 # rdf plot of example LAMMPS generated structure
 ![alt text](<DM2_SiC generation/Denoise_output_rdf.png>)
-# rdf plot of example diffusion generated structure
+# Rdf plot of example diffusion generated structure
 ![alt text](<DM2_SiC generation/LAMMPS_rdf.png>)
+# Example denoise trajectory
+![alt text](<Example denoise trajectory.gif>)
 
 3. Potential next steps include
 -   Inclusion of a gradient accumulation step in the training process to improve stability with small batch sizes due to the limited VRAM available.

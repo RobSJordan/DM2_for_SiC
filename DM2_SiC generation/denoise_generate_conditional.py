@@ -166,12 +166,12 @@ def main():
     # === Change here ===#
     gpu_id = 0
     set_gpu(gpu_id)
-    model = torch.load('/home/robert/lammps/rob_work/demo_generating/model_v0.pt')
+    model = torch.load('../DM2_SiC Model Training/Model_v0 results/model_v0.pt')
     CUTOFF = 5
     target_cooling_rate = 0.1  # Ideal range: 10^-2 to 10^3. Max range: 10^-4 to 10^4 
     model = model.to('cuda')
-    TEST_FNAME = '/home/robert/lammps/rob_work/demo_generating/inital_data/SiC_initial_23.data'
-    OUTPUT_FNAME = '/home/robert/lammps/rob_work/demo_generating/output/denoised_SiC_23_demo.extxyz'
+    TEST_FNAME = './inital_data/SiC_initial_23.data'
+    OUTPUT_FNAME = './output/denoised_SiC_23_demo.extxyz'
     # ===================#
 
     noisy_atoms = ase.io.read(TEST_FNAME, format='lammps-data')
