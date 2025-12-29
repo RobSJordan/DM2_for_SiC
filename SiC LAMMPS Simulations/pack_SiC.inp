@@ -1,0 +1,14 @@
+check
+tolerance 2.0
+filetype xyz
+output SiC_initial_01.xyz
+
+structure si.xyz
+  number 1500
+  inside cube 0. 0. 0. 33.2
+end structure
+
+structure c.xyz
+  number 1500
+  inside cube 0. 0. 0. 33.2
+end structure

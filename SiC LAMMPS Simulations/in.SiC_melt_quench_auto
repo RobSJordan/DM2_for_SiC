@@ -1,0 +1,69 @@
+# --- Initialization ---
+units           metal
+dimension       3
+boundary        p p p
+atom_style      atomic
+newton          on
+
+# --- System Definition ---
+# If is_resume is > 0, read the restart file. Otherwise, start from the data file.
+if "${is_resume} > 0" then "read_restart ${restart_read_fname}" else "read_data ${infile}"
+
+# --- Force Field (1=N, 2=Si) ---
+# Mapping: 1=C (Mass 12), 2=Si (Mass 28) as per your data file
+pair_style      vashishta/kk
+pair_coeff      * * SiC.vashishta C Si
+
+# --- Simulation Settings ---
+neighbor        2.0 bin
+neigh_modify    every 1 delay 0 check yes
+timestep        0.001  # 1.0 fs
+
+# --- Output Formatting ---
+thermo_style    custom step temp pe press density vol
+thermo          1000   # Print status every 1 ps
+restart         50000 ${restart_stem}.* # Save a restart file every 50 ps
+
+# --- 1. Melt (50 ps at 5000 K) ---
+# Aim: Liquid equilibration to remove "memory" of Packmol structure
+variable melt_end_step equal 50000
+variable quench_end_step equal ${melt_end_step}+${quench_steps}
+variable relax_end_step equal ${quench_end_step}+100000
+
+# --- Logic to skip completed phases on resume ---
+variable cur_step equal step
+
+# --- 1. Melt (50 ps at 5000 K) ---
+if "${cur_step} >= ${melt_end_step}" then "jump SELF skip_melt"
+
+if "${is_resume} == 0" then "velocity all create 5000 ${seed}"
+fix             1 all npt/kk temp 5000 5000 0.1 iso 0.0 0.0 1.0
+run             ${melt_end_step} upto
+unfix           1
+
+label skip_melt
+
+# --- 2. Quench (Variable duration, 5000 K -> 300 K) ---
+if "${cur_step} >= ${quench_end_step}" then "jump SELF skip_quench"
+
+# Calculate start temp based on current progress (crucial for smooth resumes)
+variable progress equal (step-${melt_end_step})/${quench_steps}
+variable T_start equal 5000.0+(300.0-5000.0)*v_progress
+
+fix             2 all npt/kk temp ${T_start} 300 0.1 iso 0.0 0.0 1.0
+run             ${quench_end_step} upto
+unfix           2
+
+label skip_quench
+
+# --- 3. Final Relaxation (100 ps at 300 K) ---
+if "${cur_step} >= ${relax_end_step}" then "jump SELF skip_relax"
+
+fix             3 all npt/kk temp 300 300 0.1 iso 0.0 0.0 1.0
+dump            1 all custom 10000 ${dumpfile} id type x y z
+run             ${relax_end_step} upto
+
+label skip_relax
+
+# --- Final Output ---
+write_data      ${outfile}
